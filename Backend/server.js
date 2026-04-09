@@ -19,7 +19,7 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (Postman, mobile apps, curl)
+   
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
@@ -85,7 +85,7 @@ const verifyToken = (req, res, next) => {
 
 // ================= ROOT ROUTE =================
 app.get("/", (req, res) => {
-  res.send("🚀 GenieStudio Backend is Working!");
+  res.send("🚀 GenieMedia Backend is Working!");
 });
 
 // ================= LOGIN =================
