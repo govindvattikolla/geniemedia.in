@@ -17,6 +17,17 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://geniemedia.in",
 ];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(null, false); // ✅ FIXED
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+}));
 app.options("/*", cors());
 
 
@@ -85,6 +96,8 @@ const getImageUrl = (imagePath) => {
 };
 // ================= JWT MIDDLEWARE =================
 const verifyToken = (req, res, next) => {
+  if (req.method === "OPTIONS") return next(); // ✅ allow preflight
+
   const authHeader = req.headers["authorization"];
   if (!authHeader)
     return res.status(403).json({ success: false, message: "No token provided" });
@@ -110,7 +123,7 @@ app.use((req, res, next) => {
   }
   next();
 });
-// ================= ROOT =================
+
 app.get("/", (req, res) => {
   res.send("🚀 GenieMedia Backend is Working!");
 });
@@ -212,17 +225,16 @@ app.post("/api/blogs", verifyToken, upload.single("image"), async (req, res) => 
   }
 });
 // ================= GET PUBLIC BLOGS =================
-app.get("/api/blogs", (req, res) => {
-  db.query("SELECT * FROM blogs WHERE status = 'published' ORDER BY createdAt DESC", (err, results) => {
-    if (err) return res.status(500).json({ success: false, message: "Failed to fetch blogs" });
+app.get("/api/blog/:slug", (req, res) => {
+  const { slug } = req.params;
 
-    // ✅ Return full HTTPS URL, no base64
-    const blogs = results.map((blog) => ({
-      ...blog,
-      image: getImageUrl(blog.image),
-    }));
+  db.query("SELECT * FROM blogs WHERE permalink = ?", [slug], (err, result) => {
+    if (err) return res.status(500).json({ success: false, message: "Database error" });
+    if (result.length === 0)
+      return res.status(404).json({ success: false, message: "Blog not found" });
 
-    res.json(blogs);
+    const blog = { ...result[0], image: getImageUrl(result[0].image) };
+    res.json(blog);
   });
 });
 
