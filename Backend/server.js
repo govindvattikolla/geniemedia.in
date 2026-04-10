@@ -17,7 +17,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://geniemedia.in",
 ];
-app.options("*", cors());
+app.options("/*", cors());
 
 
 app.use(
