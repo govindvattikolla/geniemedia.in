@@ -17,6 +17,8 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://geniemedia.in",
 ];
+app.options("*", cors());
+
 
 app.use(
   cors({
@@ -75,7 +77,7 @@ const upload = multer({
   },
 });
 // ================= HELPER: Build full image URL =================
-const BASE_URL = process.env.BASE_URL || "https://geniestudio.in";
+const BASE_URL = process.env.BASE_URL || "https://geniemedia.in";
 // WITH THIS:
 const getImageUrl = (imagePath) => {
   if (!imagePath) return null;
@@ -110,7 +112,7 @@ app.use((req, res, next) => {
 });
 // ================= ROOT =================
 app.get("/", (req, res) => {
-  res.send("🚀 GenieStudio Backend is Working!");
+  res.send("🚀 GenieMedia Backend is Working!");
 });
 
 // ================= LOGIN =================
@@ -181,7 +183,7 @@ app.post("/api/blogs", verifyToken, upload.single("image"), async (req, res) => 
       formData.append("file", fs.createReadStream(req.file.path));
 
       const response = await axios.post(
-        "https://geniestudio.in/upload.php", // 👈 Hostinger API
+        "https://geniemedia.in/upload.php", // 👈 Hostinger API
         formData,
         { headers: formData.getHeaders() }
       );
