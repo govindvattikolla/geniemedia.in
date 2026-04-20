@@ -43,7 +43,8 @@ app.use(
 );
 
 // ✅ FIXED: Handle ALL preflight OPTIONS requests explicitly before any routes
-app.options("*", cors());
+// Note: Express v5 + path-to-regexp v8 no longer supports bare "*" — use "(.*)" instead
+app.options("(.*)", cors());
 
 app.use(express.json());
 
