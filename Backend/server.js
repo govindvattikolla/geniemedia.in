@@ -22,7 +22,7 @@ const allowedOrigins = [
   "https://www.geniemedia.in/"
 ];
 
-app.options("*", cors());
+
 
 app.use(
   cors({
