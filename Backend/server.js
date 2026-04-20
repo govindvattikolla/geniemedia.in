@@ -17,26 +17,23 @@ const app = express();
 // ================= CORS =================
 const allowedOrigins = [
   "http://localhost:5173",
-  "http://127.0.0.1:5173", // ✅ add this
+  "http://127.0.0.1:5173",
   "https://geniemedia.in",
-  "https://www.geniemedia.in/"
+  "https://www.geniemedia.in"   // ✅ FIXED: removed trailing slash
 ];
-
-
 
 app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin) return callback(null, true);
 
-      // ✅ FIX: flexible matching instead of strict includes
       const isAllowed = allowedOrigins.some((allowed) =>
         origin.startsWith(allowed)
       );
 
       if (isAllowed) return callback(null, true);
 
-      console.log("❌ Blocked by CORS:", origin); // 👈 debug
+      console.log("❌ Blocked by CORS:", origin);
       return callback(new Error("Not allowed by CORS"));
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -44,6 +41,10 @@ app.use(
     credentials: true,
   })
 );
+
+// ✅ FIXED: Handle ALL preflight OPTIONS requests explicitly before any routes
+app.options("*", cors());
+
 app.use(express.json());
 
 // ================= STATIC FILES =================
@@ -287,8 +288,7 @@ app.put("/api/blogs/:id", verifyToken, upload.single("image"), async (req, res) 
     let imageUrl;
 
     if (req.file) {
-      // ✅ FIX: New file uploaded → send it to Hostinger upload.php, get full HTTPS URL
-      // Previously this was storing a local /uploads/ path which broke on Hostinger
+      // ✅ New file uploaded → send it to Hostinger upload.php, get full HTTPS URL
       imageUrl = await uploadToHostinger(req.file.path);
     } else if (existingImage && existingImage.trim() !== "") {
       // ✅ No new file, but frontend passed the current image URL → keep it
@@ -320,7 +320,7 @@ app.put("/api/blogs/:id", verifyToken, upload.single("image"), async (req, res) 
       category,
       keywords,
       status,
-      imageUrl,   // ✅ always explicitly set — no conditional column building
+      imageUrl,
       Date.now(),
       id,
     ];
@@ -368,7 +368,7 @@ const escapeHtml = (str) =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-// ================= OG SHARE PREVIEW =================
+
 app.use("/share/", (req, res) => {
   const permalink = req.path.replace(/^\//, "");
   if (!permalink) return res.redirect("https://geniemedia.in");
