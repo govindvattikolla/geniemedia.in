@@ -17,6 +17,7 @@ const app = express();
 // ================= CORS =================
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://127.0.0.1:5173", // ✅ add this
   "https://geniemedia.in",
 ];
 
@@ -24,7 +25,15 @@ app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
+
+      // ✅ FIX: flexible matching instead of strict includes
+      const isAllowed = allowedOrigins.some((allowed) =>
+        origin.startsWith(allowed)
+      );
+
+      if (isAllowed) return callback(null, true);
+
+      console.log("❌ Blocked by CORS:", origin); // 👈 debug
       return callback(new Error("Not allowed by CORS"));
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -32,7 +41,6 @@ app.use(
     credentials: true,
   })
 );
-
 app.use(express.json());
 
 // ================= STATIC FILES =================
