@@ -17,23 +17,14 @@ const app = express();
 // ================= CORS =================
 const allowedOrigins = [
   "http://localhost:5173",
-  "http://127.0.0.1:5173",
   "https://geniemedia.in",
-  "https://www.geniemedia.in"   // ✅ FIXED: removed trailing slash
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin) return callback(null, true);
-
-      const isAllowed = allowedOrigins.some((allowed) =>
-        origin.startsWith(allowed)
-      );
-
-      if (isAllowed) return callback(null, true);
-
-      console.log("❌ Blocked by CORS:", origin);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
       return callback(new Error("Not allowed by CORS"));
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -41,10 +32,6 @@ app.use(
     credentials: true,
   })
 );
-
-// ✅ FIXED: Handle ALL preflight OPTIONS requests explicitly before any routes
-// Note: Express v5 + path-to-regexp v8 no longer supports bare "*" — use "(.*)" instead
-app.options("(.*)", cors());
 
 app.use(express.json());
 
@@ -289,7 +276,8 @@ app.put("/api/blogs/:id", verifyToken, upload.single("image"), async (req, res) 
     let imageUrl;
 
     if (req.file) {
-      // ✅ New file uploaded → send it to Hostinger upload.php, get full HTTPS URL
+      // ✅ FIX: New file uploaded → send it to Hostinger upload.php, get full HTTPS URL
+      // Previously this was storing a local /uploads/ path which broke on Hostinger
       imageUrl = await uploadToHostinger(req.file.path);
     } else if (existingImage && existingImage.trim() !== "") {
       // ✅ No new file, but frontend passed the current image URL → keep it
@@ -321,7 +309,7 @@ app.put("/api/blogs/:id", verifyToken, upload.single("image"), async (req, res) 
       category,
       keywords,
       status,
-      imageUrl,
+      imageUrl,   // ✅ always explicitly set — no conditional column building
       Date.now(),
       id,
     ];
@@ -369,7 +357,7 @@ const escapeHtml = (str) =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-
+// ================= OG SHARE PREVIEW =================
 app.use("/share/", (req, res) => {
   const permalink = req.path.replace(/^\//, "");
   if (!permalink) return res.redirect("https://geniemedia.in");
