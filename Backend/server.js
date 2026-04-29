@@ -20,7 +20,7 @@ const allowedOrigins = [
   "http://127.0.0.1:5173",
   "https://geniemedia.in",
   "https://www.geniemedia.in",  // ✅ FIX 1: added www variant (no trailing slash)
-  "https://genie-media-studio.vercel.app/",
+  "https://genie-media-studio.vercel.app",
 ];
 
 const corsOptions = {
