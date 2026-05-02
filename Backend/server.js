@@ -423,6 +423,48 @@ app.use("/share/", (req, res) => {
   );
 });
 
+// ================= DYNAMIC BLOG SITEMAP =================
+app.get("/blogs.xml", (req, res) => {
+  const sql = `
+    SELECT permalink, updatedAt 
+    FROM blogs 
+    WHERE status = 'published'
+    ORDER BY updatedAt DESC
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Sitemap DB Error:", err);
+      return res.status(500).send("Error generating sitemap");
+    }
+
+    const baseUrl = "https://geniemedia.in";
+
+    const urls = results.map((blog) => {
+      // Convert timestamp → YYYY-MM-DD
+      const lastmod = blog.updatedAt
+        ? new Date(Number(blog.updatedAt)).toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0];
+
+      return `
+      <url>
+        <loc>${baseUrl}/blog/${blog.permalink}</loc>
+        <lastmod>${lastmod}</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+      </url>`;
+    }).join("");
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`;
+
+    res.header("Content-Type", "application/xml");
+    res.send(xml);
+  });
+});
+
 // ================= START =================
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
